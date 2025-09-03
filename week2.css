@@ -1,0 +1,68 @@
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f0f0; /* HEX color */
+  margin: 0;
+  padding: 0;
+}
+
+#main-header {
+  background-color: rgb(34, 34, 34); /* RGB color */
+  color: white;
+  padding: 20px;
+  text-align: center;
+}
+
+.company-name {
+  color: hsl(200, 80%, 50%); /* HSL color */
+}
+
+[data-department="design"] {
+  border-left: 5px solid rgba(0, 128, 128, 0.7); /* RGBA color */
+  padding: 15px;
+  margin: 20px;
+  background-color: #ffffff;
+}
+
+a.learn-more:hover {
+  color: #ff6600;
+  text-decoration: underline;
+}
+
+p::first-line {
+  font-weight: bold;
+  color: #333;
+}
+
+.movie-list {
+  list-style-type: square;
+  padding-left: 20px;
+}
+
+.movie-list li {
+  color: #444;
+}
+
+.favorite-movie {
+  font-weight: bold;
+  color: rgb(255, 99, 71);
+  background-color: rgba(255, 255, 0, 0.2);
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.city-list li:nth-child(1) {
+  background-color: hsl(340, 100%, 90%);
+  padding: 5px;
+}
+
+.city-list li:nth-child(2) {
+  background-color: #e0f7fa;
+  padding: 5px;
+}
+
+.city-list li:nth-child(3) {
+  background-color: rgb(230, 230, 250);
+  padding: 5px;
+  font-style: italic;
+}
