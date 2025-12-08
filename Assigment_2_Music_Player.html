@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Custom Music Player</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #1d4ed8, #020617);
+      color: #e5e7eb;
+      padding: 20px;
+    }
+
+    .player {
+      width: 100%;
+      max-width: 800px;
+      background: #020617;
+      border-radius: 20px;
+      padding: 20px 22px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 720px) {
+      .player {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .now-playing {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      padding-right: 8px;
+      border-right: 1px solid #111827;
+    }
+
+    @media (max-width: 720px) {
+      .now-playing {
+        border-right: none;
+        border-bottom: 1px solid #111827;
+        padding-bottom: 14px;
+        margin-bottom: 10px;
+      }
+    }
+
+    .artwork {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #1e293b, #111827);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      font-weight: 600;
+      color: #4ade80;
+    }
+
+    .track-info h2 {
+      font-size: 1.1rem;
+      margin-bottom: 2px;
+    }
+
+    .track-info p {
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .btn-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: #111827;
+      color: #e5e7eb;
+      transition: background 0.15s ease, transform 0.08s ease,
+        box-shadow 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .btn:hover {
+      background: #1f2937;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn.primary {
+      background: #2563eb;
+      box-shadow: 0 12px 25px rgba(37, 99, 235, 0.5);
+    }
+
+    .btn.primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn.sm {
+      padding: 6px 9px;
+      font-size: 0.8rem;
+    }
+
+    .time-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .time-row span {
+      width: 44px;
+      text-align: center;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 5px;
+      background: #111827;
+      border-radius: 999px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #3b82f6;
+      cursor: pointer;
+    }
+
+    .volume-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .volume-row span {
+      white-space: nowrap;
+    }
+
+    /* Playlist */
+    .playlist-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .playlist-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .playlist-header h3 {
+      font-size: 1rem;
+    }
+
+    .playlist-controls {
+      display: flex;
+      gap: 6px;
+    }
+
+    #playlist {
+      list-style: none;
+      max-height: 260px;
+      overflow-y: auto;
+      border-radius: 12px;
+      border: 1px solid #111827;
+      padding: 6px;
+      background: #020617;
+    }
+
+    #playlist::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #playlist::-webkit-scrollbar-thumb {
+      background: #4b5563;
+      border-radius: 999px;
+    }
+
+    .track {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.12s ease;
+    }
+
+    .track-left {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .track-title {
+      font-weight: 500;
+    }
+
+    .track-artist {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .track:hover {
+      background: #020617;
+    }
+
+    .track.active {
+      background: #1d4ed8;
+    }
+
+    .track.active .track-title,
+    .track.active .track-artist {
+      color: #e5e7eb;
+    }
+
+    .track button {
+      font-size: 0.8rem;
+      border-radius: 999px;
+      border: none;
+      padding: 4px 8px;
+      background: #111827;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
+
+    .track button:hover {
+      background: #b91c1c;
+    }
+
+    /* Add track form */
+    .add-track-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .add-track-form input[type="text"] {
+      flex: 1;
+      min-width: 120px;
+      padding: 7px 9px;
+      border-radius: 999px;
+      border: 1px solid #111827;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.8rem;
+    }
+
+    .add-track-form input[type="file"] {
+      font-size: 0.75rem;
+      max-width: 180px;
+      color: #9ca3af;
+    }
+
+    .badge {
+      font-size: 0.68rem;
+      padding: 3px 7px;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+      color: #9ca3af;
+    }
+  </style>
+</head>
+<body>
+  <div class="player">
+    <!-- Left: Now Playing + Controls -->
+    <div class="now-playing">
+      <div class="artwork" id="artwork">
+        ♪
+      </div>
+
+      <div class="track-info">
+        <h2 id="trackTitle">No track selected</h2>
+        <p id="trackArtist">Add a song to get started</p>
+      </div>
+
+      <div class="controls">
+        <div class="btn-row">
+          <button class="btn sm" id="prevBtn">⏮ Prev</button>
+          <button class="btn primary" id="playPauseBtn">▶ Play</button>
+          <button class="btn sm" id="nextBtn">Next ⏭</button>
+        </div>
+
+        <div class="time-row">
+          <span id="currentTime">00:00</span>
+          <input type="range" id="seekBar" value="0" min="0" step="1" />
+          <span id="duration">00:00</span>
+        </div>
+
+        <div class="volume-row">
+          <span>🔊 Volume</span>
+          <input
+            type="range"
+            id="volumeBar"
+            min="0"
+            max="1"
+            step="0.01"
+            value="0.9"
+          />
+        </div>
+      </div>
+
+      <!-- Hidden audio element (controlled via JS) -->
+      <audio id="audio"></audio>
+    </div>
+
+    <!-- Right: Playlist -->
+    <div class="playlist-section">
+      <div class="playlist-header">
+        <h3>Playlist</h3>
+        <span class="badge" id="trackCount">0 track(s)</span>
+      </div>
+
+      <ul id="playlist"></ul>
+
+      <form class="add-track-form" id="addTrackForm">
+        <input
+          type="text"
+          id="newTitle"
+          placeholder="Track title"
+          required
+        />
+        <input
+          type="file"
+          id="newFile"
+          accept="audio/*"
+          required
+        />
+        <button type="submit" class="btn sm">Add +</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ======== State & Initial Playlist ========
+    const playlist = [
+      {
+        title: "Chill Vibes",
+        artist: "Sample Track 1",
+        src: "music/song1.mp3", // change to your file
+      },
+      {
+        title: "Focus Beats",
+        artist: "Sample Track 2",
+        src: "music/song2.mp3", // change to your file
+      },
+      {
+        title: "Night Drive",
+        artist: "Sample Track 3",
+        src: "music/song3.mp3", // change to your file
+      },
+    ];
+
+    let currentIndex = 0;
+    let isPlaying = false;
+
+    // ======== DOM Elements ========
+    const audio = document.getElementById("audio");
+    const trackTitle = document.getElementById("trackTitle");
+    const trackArtist = document.getElementById("trackArtist");
+    const artwork = document.getElementById("artwork");
+
+    const playPauseBtn = document.getElementById("playPauseBtn");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+
+    const seekBar = document.getElementById("seekBar");
+    const currentTimeEl = document.getElementById("currentTime");
+    const durationEl = document.getElementById("duration");
+    const volumeBar = document.getElementById("volumeBar");
+
+    const playlistEl = document.getElementById("playlist");
+    const trackCountEl = document.getElementById("trackCount");
+
+    const addTrackForm = document.getElementById("addTrackForm");
+    const newTitleInput = document.getElementById("newTitle");
+    const newFileInput = document.getElementById("newFile");
+
+    // ======== Helper: Format time (seconds -> mm:ss) ========
+    function formatTime(sec) {
+      if (isNaN(sec) || sec === Infinity) return "00:00";
+      const minutes = Math.floor(sec / 60);
+      const seconds = Math.floor(sec % 60);
+      const m = minutes < 10 ? "0" + minutes : minutes;
+      const s = seconds < 10 ? "0" + seconds : seconds;
+      return `${m}:${s}`;
+    }
+
+    // ======== Load Track ========
+    function loadTrack(index) {
+      if (playlist.length === 0) {
+        trackTitle.textContent = "No track selected";
+        trackArtist.textContent = "Add a song to get started";
+        audio.removeAttribute("src");
+        seekBar.value = 0;
+        currentTimeEl.textContent = "00:00";
+        durationEl.textContent = "00:00";
+        updatePlaylistUI();
+        return;
+      }
+
+      if (index < 0) index = playlist.length - 1;
+      if (index >= playlist.length) index = 0;
+      currentIndex = index;
+
+      const track = playlist[currentIndex];
+      audio.src = track.src;
+      trackTitle.textContent = track.title;
+      trackArtist.textContent = track.artist;
+      // Use first letter of title as "artwork"
+      artwork.textContent = track.title.charAt(0).toUpperCase() || "♪";
+
+      updatePlaylistUI();
+    }
+
+    // ======== Update Playlist UI ========
+    function updatePlaylistUI() {
+      playlistEl.innerHTML = "";
+
+      playlist.forEach((track, index) => {
+        const li = document.createElement("li");
+        li.className = "track" + (index === currentIndex ? " active" : "");
+        li.dataset.index = index;
+
+        li.innerHTML = `
+          <div class="track-left">
+            <span class="track-title">${track.title}</span>
+            <span class="track-artist">${track.artist}</span>
+          </div>
+          <button class="remove-btn">✕</button>
+        `;
+
+        playlistEl.appendChild(li);
+      });
+
+      trackCountEl.textContent = `${playlist.length} track(s)`;
+    }
+
+    // ======== Play / Pause ========
+    function playTrack() {
+      if (!audio.src && playlist.length > 0) {
+        loadTrack(currentIndex);
+      }
+      audio.play();
+      isPlaying = true;
+      playPauseBtn.textContent = "⏸ Pause";
+      playPauseBtn.classList.add("primary");
+    }
+
+    function pauseTrack() {
+      audio.pause();
+      isPlaying = false;
+      playPauseBtn.textContent = "▶ Play";
+      playPauseBtn.classList.add("primary");
+    }
+
+    function togglePlayPause() {
+      if (!audio.src && playlist.length > 0) {
+        loadTrack(currentIndex);
+      }
+      if (audio.paused) {
+        playTrack();
+      } else {
+        pauseTrack();
+      }
+    }
+
+    // ======== Next / Prev ========
+    function nextTrack() {
+      if (playlist.length === 0) return;
+      loadTrack(currentIndex + 1);
+      playTrack();
+    }
+
+    function prevTrack() {
+      if (playlist.length === 0) return;
+      loadTrack(currentIndex - 1);
+      playTrack();
+    }
+
+    // ======== Event Listeners: Controls ========
+    playPauseBtn.addEventListener("click", togglePlayPause);
+    nextBtn.addEventListener("click", nextTrack);
+    prevBtn.addEventListener("click", prevTrack);
+
+    // Seek bar: user drags -> seek to that time
+    seekBar.addEventListener("input", () => {
+      if (audio.duration) {
+        audio.currentTime = seekBar.value;
+      }
+    });
+
+    // Volume control
+    volumeBar.addEventListener("input", () => {
+      audio.volume = volumeBar.value;
+    });
+
+    // ======== Audio Events (Time Updates, Metadata, Ended) ========
+    audio.addEventListener("timeupdate", () => {
+      if (!audio.duration) return;
+      seekBar.max = Math.floor(audio.duration);
+      seekBar.value = Math.floor(audio.currentTime);
+      currentTimeEl.textContent = formatTime(audio.currentTime);
+    });
+
+    audio.addEventListener("loadedmetadata", () => {
+      durationEl.textContent = formatTime(audio.duration);
+      seekBar.max = Math.floor(audio.duration);
+    });
+
+    audio.addEventListener("ended", () => {
+      nextTrack(); // auto-play next
+    });
+
+    // ======== Playlist Clicks (Event Delegation) ========
+    playlistEl.addEventListener("click", (e) => {
+      const li = e.target.closest(".track");
+      if (!li) return;
+      const index = Number(li.dataset.index);
+
+      // If remove button clicked
+      if (e.target.classList.contains("remove-btn")) {
+        // If removing current track, move to next
+        if (index === currentIndex) {
+          // Pause current track
+          pauseTrack();
+        }
+
+        playlist.splice(index, 1);
+
+        if (playlist.length === 0) {
+          currentIndex = 0;
+          loadTrack(0);
+          pauseTrack();
+        } else {
+          if (index < currentIndex) {
+            currentIndex -= 1;
+          } else if (index === currentIndex) {
+            currentIndex = currentIndex % playlist.length;
+            loadTrack(currentIndex);
+          }
+        }
+        updatePlaylistUI();
+        return;
+      }
+
+      // Otherwise select & play that track
+      loadTrack(index);
+      playTrack();
+    });
+
+    // ======== Add Track Form (Dynamic Playlist) ========
+    addTrackForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const title = newTitleInput.value.trim();
+      const file = newFileInput.files[0];
+
+      if (!title || !file) return;
+
+      const src = URL.createObjectURL(file);
+
+      playlist.push({
+        title,
+        artist: "Local File",
+        src,
+      });
+
+      newTitleInput.value = "";
+      newFileInput.value = "";
+      updatePlaylistUI();
+
+      // If this is the first track, load it
+      if (playlist.length === 1) {
+        loadTrack(0);
+      }
+    });
+
+    // ======== Initial Setup ========
+    audio.volume = volumeBar.value;
+    loadTrack(currentIndex);
+    updatePlaylistUI();
+  </script>
+</body>
+</html>
